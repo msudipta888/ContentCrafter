@@ -1,10 +1,11 @@
 const { Telegraf } = require("telegraf");
 const userModel = require("./models/userModel");
-const bot = new Telegraf(process.env.TELEGRAM_BOT_API);
+
 const connectDb = require("./db/database");
 const { message } = require("telegraf/filters");
-
+require('dotenv').config();
 const eventModel = require("./models/Event");
+const bot = new Telegraf(process.env.TELEGRAM_BOT_API);
 try {
   connectDb();
 } catch (error) {
@@ -137,7 +138,7 @@ bot.command("prompt", async (ctx) => {
       body: JSON.stringify({
         model: process.env.MODEL,
         messages: [{ role: "user", content: promptFromUser }],
-        max_tokens: 100,
+        max_tokens: 400,
       }),
     });
 
