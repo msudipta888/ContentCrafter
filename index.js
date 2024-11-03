@@ -22,38 +22,75 @@ const messageId = Date.now().toString();
 // Store current edited text temporarily
 const editedTextStore = new Map();
 const awaitingTextInput = new Map();
-const userHashtagsMap = new Map(); // To store hashtags for each user/message
+const userHashtagsMap = new Map(); 
+let hashtagsArray= new Array(); ;
 let waitingstate = null;
+
 // Function to get a random sticker
 function getRandomSticker() {
   return stickerList[Math.floor(Math.random() * 3)];
 }
-const textStore = new Map();
-bot.start(async (ctx) => {
-  //store user info in db
-  const user = ctx.update.message.from;
-  try {
-    await userModel.findOneAndUpdate(
-      { tgId: user.id },
-      {
-        $setOnInsert: {
-          firstName: user.first_name,
-          lastName: user.last_name,
-          isBot: user.is_bot,
-          userName: user.username,
-        },
-      },
-      { upsert: true, new: true }
-    );
-    await ctx.reply(
-      `Hey ${user.first_name} , Welcome. I will be writting highly engagging social media posts for you 🚀 Just keep feeding me
-    with the events throughout the day. Let's shine on social media`
-    );
-  } catch (error) {
-    ctx.reply("Sorry something wrong!");
-  }
 
-  //reply after hit /start
+const textStore = new Map();
+function clearAllData() {
+  hashtagsArray = new Array(); // Reset the array
+  userHashtagsMap.clear();    // Clear the map completely
+  waitingstate = null;        // Reset waiting state
+  textStore.clear();  
+          // Clear text store
+}
+bot.start(async (ctx) => {
+  try {
+    // Get user data from context
+    const user = ctx.update.message.from;
+    
+    if (!user || !user.id) {
+      throw new Error('Invalid user data');
+    }
+console.log("user",user);
+    // Clear previous hashtags for this user
+   clearAllData();
+    try {
+      const newUser = await userModel.create({
+        tgId:user.id,
+        firstName:user.first_name,
+        lastName:user?.last_name,
+        isBot:user.is_bot,
+        userName:user.username
+      });
+      console.log('New user created:', newUser);
+    } catch (dbError) {
+      // If user already exists (duplicate key error)
+      if (dbError.code === 11000) {
+        console.log('User already exists, updating information...');
+        const updatedUser = await userModel.findOneAndUpdate(
+          { tgId: user.id },
+          { $set: {
+            tgId:user.id,
+        firstName:user.first_name,
+        lastName:user?.last_name,
+        isBot:user.is_bot,
+        userName:user.username
+          } },
+          { new: true }
+        );
+        console.log('User information updated:', updatedUser);
+      } else {
+        // For other database errors
+        console.error('Database error:', dbError);
+        throw dbError;
+      }
+    }
+
+    // Send welcome message
+    await ctx.reply(
+      `Hey ${user.first_name}, Welcome! I will be writing highly engaging social media posts for you 🚀 Just keep feeding me with the events throughout the day. Let's shine on social media`
+    );
+
+  } catch (error) {
+    console.error('Error in start command:', error);
+    await ctx.reply("Sorry, something went wrong! Please try again.");
+  }
 });
 
 function formatTextForTelegram(text) {
@@ -191,7 +228,6 @@ bot.command("help", async (ctx) => {
 });
 
   //post
-
 bot.command("post", async (ctx) => {
   try {
     await ctx.reply("Choose where you'd like to post. I'll check back in a few minutes.\n", {
@@ -206,10 +242,11 @@ bot.command("post", async (ctx) => {
       },
       parse_mode: "HTML",
     });
-  const postId =  setTimeout(() => {
+    setTimeout(() => {
       ctx.reply("posted done 👍");
-    }, 120000);
-    clearTimeout(()=>postId);
+
+    }, 100000);
+    
   } catch (error) {
     await ctx.reply("An error occurred. Please try again.");
   }
@@ -384,23 +421,24 @@ bot.on('callback_query', async (ctx) => {
    
 });
 
-const hashtagsArray = new Array();
+
 bot.on(message('text'), async(ctx)=>{
  if(waitingstate==='hashtag' && messageId){
+  const userId = ctx.update.message.from.id;
   const callBackdata = ctx.update.message.text;
-  const messages_id = ctx.update.message.from.id 
   const textData = textStore.get(messageId);
   const text = textData? textData.current : ""; 
 hashtagsArray.push(callBackdata)
-  const hashtags = hashtagsArray.join("");
+  const hashtags = hashtagsArray.join(" ");
   
   if (hashtagsArray.length > 0) {
-      userHashtagsMap.set(messages_id,hashtags ); 
-      const tags = userHashtagsMap.get(messages_id);
+      userHashtagsMap.set(userId,hashtags ); 
+      console.log(userHashtagsMap)
+      const tags = userHashtagsMap.get(userId);
       const newText = `${text}\n ${tags}`; // Append user's text
       editedTextStore.set(messageId, { ...textData, current: newText });
      const {message_id:ids} = await ctx.reply(`pls wait for sometime...`);
-      await ctx.reply(newText, {
+      await ctx.reply(newText, { 
         parse_mode: 'HTML',
         reply_markup: {
             inline_keyboard: [

@@ -11,7 +11,6 @@
     },
     lastName:{
         type:String,
-        required:true
     },
     isBot:{
         type:Boolean,
@@ -19,7 +18,6 @@
     },
     userName:{
         type:String,
-        required:true,
         unique:true
     },
     promtToken:{
