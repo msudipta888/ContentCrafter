@@ -4,16 +4,10 @@
   "description": "",
   "main": "index.js",
   "type": "commonjs",
-<<<<<<< HEAD
+
   "scripts": {
     "start": "nodemon index.js",
     "build": "npm install"
-=======
-"scripts": {
-    "start": "node index.js",
-    "build": "npm install",
-    "dev": "nodemon --env-file=.env index.js"
->>>>>>> 64e588f38aa469b4b3397e0f4aa64db296449917
   },
   "keywords": [],
   "author": "",
