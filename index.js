@@ -41,14 +41,14 @@ function clearAllData() {
 }
 bot.start(async (ctx) => {
   try {
-    // Get user data from context
+   
     const user = ctx.update.message.from;
     
     if (!user || !user.id) {
       throw new Error('Invalid user data');
     }
-console.log("user",user);
-    // Clear previous hashtags for this user
+
+    
    clearAllData();
    try {
     const updatedUser = await userModel.findOneAndUpdate(
@@ -63,12 +63,11 @@ console.log("user",user);
         }
       },
       { 
-        new: true, // Return the updated document
-        upsert: true // Create if it doesn’t exist
+        new: true, 
+        upsert: true 
       }
     );
     
-    console.log('User created or updated:', updatedUser);
   } catch (error) {
     console.error('Error handling user creation/update:', error);
   }
