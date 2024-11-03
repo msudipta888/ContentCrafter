@@ -50,37 +50,29 @@ bot.start(async (ctx) => {
 console.log("user",user);
     // Clear previous hashtags for this user
    clearAllData();
-    try {
-      const newUser = await userModel.create({
-        tgId:user.id,
-        firstName:user.first_name,
-        lastName:user?.last_name,
-        isBot:user.is_bot,
-        userName:user.username
-      });
-      console.log('New user created:', newUser);
-    } catch (dbError) {
-      // If user already exists (duplicate key error)
-      if (dbError.code === 11000) {
-        console.log('User already exists, updating information...');
-        const updatedUser = await userModel.findOneAndUpdate(
-          { tgId: user.id },
-          { $set: {
-            tgId:user.id,
-        firstName:user.first_name,
-        lastName:user?.last_name,
-        isBot:user.is_bot,
-        userName:user.username
-          } },
-          { new: true }
-        );
-        console.log('User information updated:', updatedUser);
-      } else {
-        // For other database errors
-        console.error('Database error:', dbError);
-        throw dbError;
+   try {
+    const updatedUser = await userModel.findOneAndUpdate(
+      { tgId: user.id }, // Search by tgId
+      { 
+        $set: {
+          tgId: user.id,
+          firstName: user.first_name,
+          lastName: user?.last_name,
+          isBot: user.is_bot,
+          userName: user.username
+        }
+      },
+      { 
+        new: true, // Return the updated document
+        upsert: true // Create if it doesn’t exist
       }
-    }
+    );
+    
+    console.log('User created or updated:', updatedUser);
+  } catch (error) {
+    console.error('Error handling user creation/update:', error);
+  }
+  
 
     // Send welcome message
     await ctx.reply(
