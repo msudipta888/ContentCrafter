@@ -1,6 +1,6 @@
 const { Telegraf } = require("telegraf");
 const userModel = require("./models/userModel");
-
+const app = require('express')();
 const connectDb = require("./db/database");
 const { message } = require("telegraf/filters");
 require('dotenv').config();
@@ -12,7 +12,12 @@ try {
   console.log(error);
   process.kill(process.pid, "SIGTERM");
 }
+const webhookPath = '/socio-bot-webhook';
+const webhookURL = `https://contentcrafter-xvyx.onrender.com${webhookPath}`;
+bot.telegram.setWebhook(webhookURL);
 
+app.use(bot.webhookCallback(webhookPath));
+console.log(bot.webhookCallback(webhookPath));
 const stickerList = [
   "CAACAgIAAxkBAANYZyPO9wPGycumOq5CzKXGWJLUfFUAAlQAA0G1Vgxqt_jHCI0B-jYE",
   "CAACAgIAAxkBAAIGbmcm7y4vXiICWGkebEYcFw6_U49PAAJmAANEDc8X1jIHSiOy0jo2BA",
@@ -39,6 +44,9 @@ function clearAllData() {
   textStore.clear();  
           // Clear text store
 }
+const uniqueUsername = ()=>{
+  return  `user${Math.floor(1000 + Math.random() * 9000)}`
+}
 bot.start(async (ctx) => {
   try {
    
@@ -48,10 +56,10 @@ bot.start(async (ctx) => {
       throw new Error('Invalid user data');
     }
 
-    
+    const userName = uniqueUsername();
    clearAllData();
    try {
-    const updatedUser = await userModel.findOneAndUpdate(
+    await userModel.findOneAndUpdate(
       { tgId: user.id }, // Search by tgId
       { 
         $set: {
@@ -59,7 +67,7 @@ bot.start(async (ctx) => {
           firstName: user.first_name,
           lastName: user?.last_name,
           isBot: user.is_bot,
-          userName: user.username
+          userName: user.username===null ? user.username : userName
         }
       },
       { 
@@ -515,9 +523,6 @@ bot.on(message("sticker"), async (ctx) => {
   await ctx.sendSticker(random);
 });
 
-
-//launch bot
-bot.launch();
 //stop bot
 process.once("SIGINT", () => bot.stop("SIGINT"));
 process.once("SIGTERM", () => bot.stop("SIGTERM"));
