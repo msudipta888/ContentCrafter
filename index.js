@@ -13,7 +13,7 @@ try {
   process.kill(process.pid, "SIGTERM");
 }
 const webhookPath = '/socio-bot-webhook';
-const webhookURL = `https://contentcrafter-xvyx.onrender.com${webhookPath}`;
+const webhookURL = `https://contentcrafter-oo7i.onrender.com${webhookPath}`;
 bot.telegram.setWebhook(webhookURL);
 
 app.use(bot.webhookCallback(webhookPath));
