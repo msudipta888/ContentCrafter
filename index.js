@@ -522,7 +522,7 @@ bot.on(message("sticker"), async (ctx) => {
   const random = getRandomSticker();
   await ctx.sendSticker(random);
 });
-
+bot.launch();
 //stop bot
 process.once("SIGINT", () => bot.stop("SIGINT"));
 process.once("SIGTERM", () => bot.stop("SIGTERM"));
